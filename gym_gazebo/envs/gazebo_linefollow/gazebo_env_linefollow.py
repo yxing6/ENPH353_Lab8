@@ -1,4 +1,3 @@
-
 import cv2
 import gym
 import math
@@ -39,7 +38,7 @@ class Gazebo_Linefollow_Env(gazebo_env.GazeboEnv):
 
         self.bridge = CvBridge()
         self.timeout = 0  # Used to keep track of images with no line detected
-
+        self.mid_x = 0.0  # center of the frame initialized to be 0, updated at each find_middle function call
 
     def process_image(self, data):
         '''
@@ -59,8 +58,55 @@ class Gazebo_Linefollow_Env(gazebo_env.GazeboEnv):
         state = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         done = False
 
-        # TODO: Analyze the cv_image and compute the state array and
-        # episode termination condition.
+        # image processing:
+        # change the frame to grey scale
+        gray = cv2.cvtColor(data, cv2.COLOR_BGR2GRAY)
+
+        # Get the total height and width information of the frame
+        dim_y, dim_x, _ = gray.shape
+
+        # blur it so the "road" far away become less easy to detect
+        # kernel_size: Gaussian kernel size
+        # sigma_x: Gaussian kernel standard deviation in X direction
+        # sigma_y: Gaussian kernel standard deviation in Y direction
+        kernel_size = 13
+        sigma_x = 5
+        sigma_y = 5
+        blur_gray = cv2.GaussianBlur(gray, (kernel_size, kernel_size), sigma_x, sigma_y)  # gray scale the image
+
+        # binary it
+        ret, binary = cv2.threshold(blur_gray, 70, 255, cv2.THRESH_BINARY)
+        last_row = binary[-1, :]
+
+        first_index = 0
+        last_index = 0
+
+        if np.any(last_row == 0):
+            last_list = last_row.tolist()
+            first_index = last_list.index(0)
+            last_index = len(last_list) - 1 - last_list[::-1].index(0)
+        elif last_row[0] == 0:
+            first_index = 0
+        elif last_row[-1] == 0:
+            last_index = dim_x - 1
+
+        mid = (first_index + last_index) / 2
+
+        sub_x = dim_x / len(state)
+
+        # Set up state array
+        state_idx = int(mid / sub_x)
+        state[state_idx] = 1
+
+        # Keep track of if car is out of the road
+        if mid <= 1 or mid >= dim_x - 1:
+            self.timeout += 1
+        else:
+            self.timeout = 0
+
+        if self.timeout >= 30:
+            done = True
+            self.timeout = 0
         #
         # The state array is a list of 10 elements indicating where in the
         # image the line is:
@@ -85,8 +131,8 @@ class Gazebo_Linefollow_Env(gazebo_env.GazeboEnv):
         rospy.wait_for_service('/gazebo/unpause_physics')
         try:
             self.unpause()
-        except (rospy.ServiceException) as e:
-            print ("/gazebo/unpause_physics service call failed")
+        except rospy.ServiceException as e:
+            print("/gazebo/unpause_physics service call failed")
 
         self.episode_history.append(action)
 
@@ -116,8 +162,8 @@ class Gazebo_Linefollow_Env(gazebo_env.GazeboEnv):
         try:
             # resp_pause = pause.call()
             self.pause()
-        except (rospy.ServiceException) as e:
-            print ("/gazebo/pause_physics service call failed")
+        except rospy.ServiceException as e:
+            print("/gazebo/pause_physics service call failed")
 
         state, done = self.process_image(data)
 
@@ -145,16 +191,16 @@ class Gazebo_Linefollow_Env(gazebo_env.GazeboEnv):
         try:
             # reset_proxy.call()
             self.reset_proxy()
-        except (rospy.ServiceException) as e:
-            print ("/gazebo/reset_simulation service call failed")
+        except rospy.ServiceException as e:
+            print("/gazebo/reset_simulation service call failed")
 
         # Unpause simulation to make observation
         rospy.wait_for_service('/gazebo/unpause_physics')
         try:
             # resp_pause = pause.call()
             self.unpause()
-        except (rospy.ServiceException) as e:
-            print ("/gazebo/unpause_physics service call failed")
+        except rospy.ServiceException as e:
+            print("/gazebo/unpause_physics service call failed")
 
         # read image data
         data = None
@@ -169,8 +215,8 @@ class Gazebo_Linefollow_Env(gazebo_env.GazeboEnv):
         try:
             # resp_pause = pause.call()
             self.pause()
-        except (rospy.ServiceException) as e:
-            print ("/gazebo/pause_physics service call failed")
+        except rospy.ServiceException as e:
+            print("/gazebo/pause_physics service call failed")
 
         self.timeout = 0
         state, done = self.process_image(data)
