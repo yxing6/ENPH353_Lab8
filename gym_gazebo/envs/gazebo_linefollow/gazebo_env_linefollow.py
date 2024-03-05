@@ -71,8 +71,8 @@ class Gazebo_Linefollow_Env(gazebo_env.GazeboEnv):
         last_row = binary[-1, :]
         sub_x = dim_x / len(state)
 
-        cv2.imshow("binary", binary)
-        cv2.waitKey(3)
+        # cv2.imshow("binary", binary)
+        # cv2.waitKey(3)
 
         if np.any(last_row == 0):
             last_list = last_row.tolist()
@@ -92,7 +92,21 @@ class Gazebo_Linefollow_Env(gazebo_env.GazeboEnv):
         if self.timeout >= 30:
             done = True
             self.timeout = 0
-        #
+
+        # text
+        text = str(state)
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        org = (00, dim_y - 30)
+        fontScale = 0.68
+        color = (0, 0, 255)
+        thickness = 1
+        labeled = cv2.putText(cv_image, text, org, font, fontScale,
+                              color, thickness, cv2.LINE_AA, False)
+        cv2.namedWindow("State", cv2.WINDOW_NORMAL)
+        cv2.resizeWindow("State", 500, 400)
+        cv2.imshow("State", labeled)
+        cv2.waitKey(3)
+
         # The state array is a list of 10 elements indicating where in the
         # image the line is:
         # i.e.
