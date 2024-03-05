@@ -53,6 +53,7 @@ class Gazebo_Linefollow_Env(gazebo_env.GazeboEnv):
             print(e)
 
         # cv2.imshow("raw", cv_image)
+        # cv2.waitKey(3)
 
         NUM_BINS = 3
         state = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -60,49 +61,33 @@ class Gazebo_Linefollow_Env(gazebo_env.GazeboEnv):
 
         # image processing:
         # change the frame to grey scale
-        gray = cv2.cvtColor(data, cv2.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
 
         # Get the total height and width information of the frame
-        dim_y, dim_x, _ = gray.shape
-
-        # blur it so the "road" far away become less easy to detect
-        # kernel_size: Gaussian kernel size
-        # sigma_x: Gaussian kernel standard deviation in X direction
-        # sigma_y: Gaussian kernel standard deviation in Y direction
-        kernel_size = 13
-        sigma_x = 5
-        sigma_y = 5
-        blur_gray = cv2.GaussianBlur(gray, (kernel_size, kernel_size), sigma_x, sigma_y)  # gray scale the image
+        dim_y, dim_x = gray.shape
 
         # binary it
-        ret, binary = cv2.threshold(blur_gray, 70, 255, cv2.THRESH_BINARY)
+        ret, binary = cv2.threshold(gray, 110, 255, cv2.THRESH_BINARY)
         last_row = binary[-1, :]
+        sub_x = dim_x / len(state)
 
-        first_index = 0
-        last_index = 0
+        cv2.imshow("binary", binary)
+        cv2.waitKey(3)
 
         if np.any(last_row == 0):
             last_list = last_row.tolist()
             first_index = last_list.index(0)
             last_index = len(last_list) - 1 - last_list[::-1].index(0)
-        elif last_row[0] == 0:
-            first_index = 0
-        elif last_row[-1] == 0:
-            last_index = dim_x - 1
+            new_mid = (first_index + last_index) / 2
+            self.mid_x = new_mid
 
-        mid = (first_index + last_index) / 2
-
-        sub_x = dim_x / len(state)
-
-        # Set up state array
-        state_idx = int(mid / sub_x)
-        state[state_idx] = 1
-
-        # Keep track of if car is out of the road
-        if mid <= 1 or mid >= dim_x - 1:
-            self.timeout += 1
-        else:
+            # Set up state array
+            state_idx = int(self.mid_x / sub_x)
+            state[state_idx] = 1
             self.timeout = 0
+
+        else:
+            self.timeout += 1
 
         if self.timeout >= 30:
             done = True
