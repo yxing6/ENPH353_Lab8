@@ -20,7 +20,7 @@ def render():
 
     if (x % render_interval == 0) and (x != 0) and (x > render_skip):
         env.render()
-    elif (((x-render_episodes) % render_interval == 0) and (x != 0) and
+    elif (((x - render_episodes) % render_interval == 0) and (x != 0) and
           (x > render_skip) and (render_episodes < x)):
         env.render(close=True)
 
@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     initial_epsilon = qlearn.epsilon
 
-    epsilon_discount = 0.99#0.9986
+    epsilon_discount = 0.99  # 0.9986
 
     start_time = time.time()
     total_episodes = 10000
@@ -77,7 +77,7 @@ if __name__ == '__main__':
 
             env._flush(force=True)
 
-            if not(done):
+            if not done:
                 state = nextState
             else:
                 last_time_steps = numpy.append(last_time_steps, [int(i + 1)])
@@ -86,25 +86,26 @@ if __name__ == '__main__':
         print("===== Completed episode {}".format(x))
 
         if highest_reward < cumulated_reward:
-                highest_reward = cumulated_reward
+            highest_reward = cumulated_reward
+            qlearn.saveQ("QValues_A+")
 
         if (x > 0) and (x % 5 == 0):
-            qlearn.saveQ("QValues")
+            # qlearn.saveQ("QValues")
             plotter.plot(env)
 
         m, s = divmod(int(time.time() - start_time), 60)
         h, m = divmod(m, 60)
-        print ("Starting EP: " + str(x+1) +
-               " - [alpha: " + str(round(qlearn.alpha, 2)) +
-               " - gamma: " + str(round(qlearn.gamma, 2)) +
-               " - epsilon: " + str(round(qlearn.epsilon, 2)) +
-               "] - Reward: " + str(cumulated_reward) +
-               "     Time: %d:%02d:%02d" % (h, m, s))
+        print("Starting EP: " + str(x + 1) +
+              " - [alpha: " + str(round(qlearn.alpha, 2)) +
+              " - gamma: " + str(round(qlearn.gamma, 2)) +
+              " - epsilon: " + str(round(qlearn.epsilon, 2)) +
+              "] - Reward: " + str(cumulated_reward) +
+              "     Time: %d:%02d:%02d" % (h, m, s))
 
     # Github table content
-    print ("\n|"+str(total_episodes)+"|"+str(qlearn.alpha)+"|" +
-           str(qlearn.gamma)+"|"+str(initial_epsilon)+"*" +
-           str(epsilon_discount)+"|"+str(highest_reward) + "| PICTURE |")
+    print("\n|" + str(total_episodes) + "|" + str(qlearn.alpha) + "|" +
+          str(qlearn.gamma) + "|" + str(initial_epsilon) + "*" +
+          str(epsilon_discount) + "|" + str(highest_reward) + "| PICTURE |")
 
     l = last_time_steps.tolist()
     l.sort()
