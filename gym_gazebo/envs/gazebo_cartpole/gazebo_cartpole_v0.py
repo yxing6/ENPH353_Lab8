@@ -68,8 +68,8 @@ class GazeboCartPolev0Env(gazebo_env.GazeboEnv):
         rospy.wait_for_service('/gazebo/unpause_physics')
         try:
             self.unpause()
-        except (rospy.ServiceException) as e:
-            print ("/gazebo/pause_physics service call failed")
+        except rospy.ServiceException as e:
+            print("/gazebo/pause_physics service call failed")
 
         # Wait for data
         data = self.data
@@ -80,8 +80,8 @@ class GazeboCartPolev0Env(gazebo_env.GazeboEnv):
         rospy.wait_for_service('/gazebo/pause_physics')
         try:
             self.pause()
-        except (rospy.ServiceException) as e:
-            print ("/gazebo/unpause_physics service call failed")
+        except rospy.ServiceException as e:
+            print("/gazebo/unpause_physics service call failed")
 
         # Take action
         if action > 0.5:
@@ -105,10 +105,10 @@ class GazeboCartPolev0Env(gazebo_env.GazeboEnv):
         state[1] = 0
 
         # Check for end condition
-        done =  x < -self.x_threshold \
-                or x > self.x_threshold \
-                or theta < -self.theta_threshold_radians \
-                or theta > self.theta_threshold_radians
+        done = x < -self.x_threshold \
+               or x > self.x_threshold \
+               or theta < -self.theta_threshold_radians \
+               or theta > self.theta_threshold_radians
         done = bool(done)
 
         if not done:
@@ -130,8 +130,8 @@ class GazeboCartPolev0Env(gazebo_env.GazeboEnv):
         rospy.wait_for_service('/gazebo/unpause_physics')
         try:
             self.unpause()
-        except (rospy.ServiceException) as e:
-            print ("/gazebo/unpause_physics service call failed")
+        except rospy.ServiceException as e:
+            print("/gazebo/unpause_physics service call failed")
 
         # Wait for data
         data = self.data
@@ -142,8 +142,8 @@ class GazeboCartPolev0Env(gazebo_env.GazeboEnv):
         rospy.wait_for_service('/gazebo/pause_physics')
         try:
             self.pause()
-        except (rospy.ServiceException) as e:
-            print ("/gazebo/pause_physics service call failed")
+        except rospy.ServiceException as e:
+            print("/gazebo/pause_physics service call failed")
 
         # Process state
         x = self.data.position[1]
