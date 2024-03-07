@@ -231,7 +231,7 @@ if __name__ == '__main__':
 
         # Calculate the cross entropy loss between the predicted actions and 
         # the actual actions
-        loss_v = torch.nn.functional.cross_entropy(action_scores_v, acts_v)
+        loss_v = objective(action_scores_v, acts_v)
 
         # Train the NN: calculate the gradients using and then adjust the 
         # weights based on the gradients
